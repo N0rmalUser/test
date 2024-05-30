@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Анализ CSV файлов</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/colreorder/1.5.2/css/colReorder.dataTables.min.css">
+    <style>
+        #unique-http-requests-table, #network-map-content, #account-names-content{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button id="show-http-requests-btn">Уникальные HTTP-Запросы</button>
+
+    <div id="unique-http-requests-table">
+        <table id="http-requests-table" class="table table-striped">
+            <thead>
+                <tr><th>HTTP Запрос</th></tr>
+            </thead>
+            <tbody>
+                {% for request in unique_http_requests %}
+                <tr><td>{{ request }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <button id="show-account-names-btn">Имена учетных записей</button>
+    <div id="account-names-content">
+        <h2>Имена учетных записей</h2>
+        <ul>
+            {% for name in account_names %}
+                <li>{{ name }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <button id="view-network-map-btn">Показать карту сети</button>
+
+    <div id="network-map-content">
+        <pre id="network-map-text"></pre>
+    </div>
+
+    <!-- Цикл для отображения всех таблиц -->
+    {% for file_name, html_table in data_frames %}
+        <h2>{{ file_name }}</h2>
+        <div>{{ html_table|safe }}</div>
+    {% endfor %}
+
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/colreorder/1.5.2/js/dataTables.colReorder.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var table = $('.table').DataTable({
+                "searching": false,
+                "lengthChange": false,
+                "pageLength": -1,
+                "lengthMenu": [[-1, 10, 25, 50, 100], ["Все", 10, 25, 50, 100]],
+                "colReorder": true, // Включает возможность изменения порядка столбцов
+                "autoWidth": false // Отключает автоматическую ширину столбцов
+            });
+
+            new $.fn.dataTable.ColReorder(table, {
+                "resize": true // Включает возможность изменения размера столбцов
+            });
+            
+            $('#show-http-requests-btn').on('click', function() {
+                $('#unique-http-requests-table').toggle();
+            });
+
+            $('#view-network-map-btn').click(function() {
+                fetch('/view-network-map')
+                    .then(response => response.text())
+                    .then(data => {
+                        $('#network-map-text').text(data);
+                        $('#network-map-content').show();
+                    })
+                    .catch(error => console.error('Ошибка:', error));
+            });
+        });
+    </script>
+</body>
+</html>
